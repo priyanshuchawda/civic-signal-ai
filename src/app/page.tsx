@@ -1,12 +1,25 @@
 import { AreaRanking } from "../components/dashboard/area-ranking";
 import { RiskSummary } from "../components/dashboard/risk-summary";
+import { RiskExplanationPanel } from "../components/dashboard/risk-explanation-panel";
 import { ComplaintIntake } from "../components/complaints/complaint-intake";
+import { explainRisk } from "../ai/gemini";
 import { getDashboardSummary } from "../data/dashboard";
 import { delhiSeedAreas } from "../data/delhi-seed";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
   const summary = getDashboardSummary(delhiSeedAreas);
   const topArea = summary.areas[0];
+  const topAreaExplanation = topArea
+    ? await explainRisk({
+        apiKey: process.env.GEMINI_API_KEY || undefined,
+        model: process.env.GEMINI_MODEL || undefined,
+        areaName: topArea.name,
+        score: topArea.score,
+        reasons: topArea.reasons,
+      })
+    : null;
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
@@ -47,7 +60,15 @@ export default function Home() {
         <RiskSummary summary={summary} />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <AreaRanking areas={summary.areas} />
+          <div className="space-y-6">
+            {topArea && topAreaExplanation ? (
+              <RiskExplanationPanel
+                area={topArea}
+                explanation={topAreaExplanation}
+              />
+            ) : null}
+            <AreaRanking areas={summary.areas} />
+          </div>
           <div className="space-y-6">
             <ComplaintIntake areas={delhiSeedAreas} />
             <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
