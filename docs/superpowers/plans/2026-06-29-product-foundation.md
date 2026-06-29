@@ -50,10 +50,10 @@
 Run:
 
 ```bash
-git checkout -b issue-2-project-foundation
+git checkout -b feat/3-project-foundation
 ```
 
-Expected: branch switches to `issue-2-project-foundation`.
+Expected: branch switches to `feat/3-project-foundation`.
 
 - [ ] **Step 2: Install the app scaffold**
 
@@ -926,7 +926,7 @@ Create `docs/workflow.md`:
 ## Branch Naming
 
 ```text
-issue-<number>-short-description
+feat/<issue-number>-short-description
 ```
 
 ## Local Flow
@@ -934,12 +934,12 @@ issue-<number>-short-description
 ```bash
 git checkout main
 git pull
-git checkout -b issue-<number>-short-description
+git checkout -b feat/<issue-number>-short-description
 npm test
 npm run build
 git add .
 git commit -m "<type>: <short outcome>"
-git push -u origin issue-<number>-short-description
+git push -u origin feat/<issue-number>-short-description
 gh pr create --draft --title "<type>: <short outcome>" --body "Closes #<number>"
 ```
 
