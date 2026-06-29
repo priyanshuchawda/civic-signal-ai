@@ -1,5 +1,6 @@
 import { AreaRanking } from "../components/dashboard/area-ranking";
 import { RiskSummary } from "../components/dashboard/risk-summary";
+import { ComplaintIntake } from "../components/complaints/complaint-intake";
 import { getDashboardSummary } from "../data/dashboard";
 import { delhiSeedAreas } from "../data/delhi-seed";
 
@@ -47,27 +48,30 @@ export default function Home() {
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <AreaRanking areas={summary.areas} />
-          <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-950">
-              Action queue
-            </h2>
-            <div className="mt-4 space-y-3">
-              {summary.areas.slice(0, 3).map((area) => (
-                <article
-                  key={area.id}
-                  className="rounded-lg border border-slate-200 p-3"
-                >
-                  <p className="text-sm font-semibold text-slate-950">
-                    {area.name}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Review {area.signals[0].toLowerCase()} and prepare a local
-                    advisory if live data confirms the signal.
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
+          <div className="space-y-6">
+            <ComplaintIntake areas={delhiSeedAreas} />
+            <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-950">
+                Action queue
+              </h2>
+              <div className="mt-4 space-y-3">
+                {summary.areas.slice(0, 3).map((area) => (
+                  <article
+                    key={area.id}
+                    className="rounded-lg border border-slate-200 p-3"
+                  >
+                    <p className="text-sm font-semibold text-slate-950">
+                      {area.name}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Review {area.signals[0].toLowerCase()} and prepare a local
+                      advisory if live data confirms the signal.
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </main>
