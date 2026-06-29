@@ -2,17 +2,19 @@ import { AreaRanking } from "../components/dashboard/area-ranking";
 import { RiskSummary } from "../components/dashboard/risk-summary";
 import { RiskExplanationPanel } from "../components/dashboard/risk-explanation-panel";
 import { ActionQueue } from "../components/dashboard/action-queue";
+import { DataSourceStatus } from "../components/dashboard/data-source-status";
 import { ComplaintIntake } from "../components/complaints/complaint-intake";
 import { explainRisk } from "../ai/gemini";
 import { getDashboardSummary } from "../data/dashboard";
 import { delhiSeedAreas } from "../data/delhi-seed";
-import { getAreasWithLiveSignals } from "../data/live-signals";
+import { getLiveSignalDataset } from "../data/live-signals";
 import { generateOperatorActions } from "../domain/recommendations";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const areas = await getAreasWithLiveSignals(delhiSeedAreas);
+  const liveDataset = await getLiveSignalDataset(delhiSeedAreas);
+  const areas = liveDataset.areas;
   const summary = getDashboardSummary(areas);
   const topArea = summary.areas[0];
   const operatorActions = generateOperatorActions(summary.areas);
@@ -63,6 +65,7 @@ export default async function Home() {
         </header>
 
         <RiskSummary summary={summary} />
+        <DataSourceStatus state={liveDataset} />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="space-y-6">
