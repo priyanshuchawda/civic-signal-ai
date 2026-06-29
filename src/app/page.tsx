@@ -1,16 +1,19 @@
 import { AreaRanking } from "../components/dashboard/area-ranking";
 import { RiskSummary } from "../components/dashboard/risk-summary";
 import { RiskExplanationPanel } from "../components/dashboard/risk-explanation-panel";
+import { ActionQueue } from "../components/dashboard/action-queue";
 import { ComplaintIntake } from "../components/complaints/complaint-intake";
 import { explainRisk } from "../ai/gemini";
 import { getDashboardSummary } from "../data/dashboard";
 import { delhiSeedAreas } from "../data/delhi-seed";
+import { generateOperatorActions } from "../domain/recommendations";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const summary = getDashboardSummary(delhiSeedAreas);
   const topArea = summary.areas[0];
+  const operatorActions = generateOperatorActions(summary.areas);
   const topAreaExplanation = topArea
     ? await explainRisk({
         apiKey: process.env.GEMINI_API_KEY || undefined,
@@ -71,27 +74,7 @@ export default async function Home() {
           </div>
           <div className="space-y-6">
             <ComplaintIntake areas={delhiSeedAreas} />
-            <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-950">
-                Action queue
-              </h2>
-              <div className="mt-4 space-y-3">
-                {summary.areas.slice(0, 3).map((area) => (
-                  <article
-                    key={area.id}
-                    className="rounded-lg border border-slate-200 p-3"
-                  >
-                    <p className="text-sm font-semibold text-slate-950">
-                      {area.name}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Review {area.signals[0].toLowerCase()} and prepare a local
-                      advisory if live data confirms the signal.
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </section>
+            <ActionQueue actions={operatorActions} />
           </div>
         </div>
       </div>
