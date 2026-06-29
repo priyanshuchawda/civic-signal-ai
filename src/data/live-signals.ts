@@ -6,6 +6,19 @@ export type LiveSignalFetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+export type LiveSignalSource = "live" | "partial" | "fallback";
+
+export type LiveSignalState = {
+  source: LiveSignalSource;
+  refreshedAt: string;
+  totalAreas: number;
+  fallbackAreaCount: number;
+};
+
+export type LiveSignalDataset = LiveSignalState & {
+  areas: CivicArea[];
+};
+
 type OpenMeteoCurrent = Record<string, unknown> & {
   time?: string;
 };
@@ -96,7 +109,7 @@ function mergeLiveFactors(
 async function getAreaWithLiveSignals(
   area: CivicArea,
   fetcher: LiveSignalFetch,
-): Promise<CivicArea> {
+): Promise<{ area: CivicArea; source: Exclude<LiveSignalSource, "partial"> }> {
   try {
     const [airQuality, weather] = await Promise.all([
       readCurrent(
@@ -114,22 +127,55 @@ async function getAreaWithLiveSignals(
     ]);
 
     return {
-      ...area,
-      factors: mergeLiveFactors(area.factors, airQuality, weather),
+      area: {
+        ...area,
+        factors: mergeLiveFactors(area.factors, airQuality, weather),
+      },
+      source: "live",
     };
   } catch {
     return {
-      ...area,
-      factors: { ...area.factors },
+      area: {
+        ...area,
+        factors: { ...area.factors },
+      },
+      source: "fallback",
     };
   }
+}
+
+export async function getLiveSignalDataset(
+  areas: CivicArea[],
+  fetcher: LiveSignalFetch = fetch,
+  now: () => Date = () => new Date(),
+): Promise<LiveSignalDataset> {
+  const results = await Promise.all(
+    areas.map((area) => getAreaWithLiveSignals(area, fetcher)),
+  );
+  const fallbackAreaCount = results.filter(
+    (result) => result.source === "fallback",
+  ).length;
+  const source: LiveSignalSource =
+    fallbackAreaCount === 0
+      ? "live"
+      : fallbackAreaCount === results.length
+        ? "fallback"
+        : "partial";
+
+  return {
+    areas: results.map((result) => result.area),
+    source,
+    refreshedAt: now().toISOString(),
+    totalAreas: results.length,
+    fallbackAreaCount,
+  };
 }
 
 export async function getAreasWithLiveSignals(
   areas: CivicArea[],
   fetcher: LiveSignalFetch = fetch,
 ) {
-  return Promise.all(
-    areas.map((area) => getAreaWithLiveSignals(area, fetcher)),
-  );
+  const dataset = await getLiveSignalDataset(areas, fetcher);
+
+  return dataset.areas;
 }

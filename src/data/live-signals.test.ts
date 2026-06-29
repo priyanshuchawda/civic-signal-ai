@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import type { CivicArea } from "./delhi-seed";
-import { getAreasWithLiveSignals } from "./live-signals";
+import {
+  getAreasWithLiveSignals,
+  getLiveSignalDataset,
+} from "./live-signals";
 
 const seedArea: CivicArea = {
   id: "anand-vihar",
@@ -69,5 +72,57 @@ describe("getAreasWithLiveSignals", () => {
     const [area] = await getAreasWithLiveSignals([seedArea], fetcher);
 
     expect(area.factors).toEqual(seedArea.factors);
+  });
+});
+
+describe("getLiveSignalDataset", () => {
+  it("returns live source metadata when all areas use live data", async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.includes("air-quality")) {
+        return jsonResponse({
+          current: {
+            time: "2026-06-29T10:00",
+            us_aqi: 100,
+          },
+        });
+      }
+
+      return jsonResponse({
+        current: {
+          time: "2026-06-29T10:00",
+          apparent_temperature: 36,
+        },
+      });
+    });
+
+    const dataset = await getLiveSignalDataset(
+      [seedArea],
+      fetcher,
+      () => new Date("2026-06-29T10:15:00.000Z"),
+    );
+
+    expect(dataset.source).toBe("live");
+    expect(dataset.refreshedAt).toBe("2026-06-29T10:15:00.000Z");
+    expect(dataset.totalAreas).toBe(1);
+    expect(dataset.fallbackAreaCount).toBe(0);
+  });
+
+  it("returns fallback source metadata when all areas use seed data", async () => {
+    const fetcher = vi.fn(async () => {
+      throw new Error("network");
+    });
+
+    const dataset = await getLiveSignalDataset(
+      [seedArea],
+      fetcher,
+      () => new Date("2026-06-29T10:15:00.000Z"),
+    );
+
+    expect(dataset.source).toBe("fallback");
+    expect(dataset.refreshedAt).toBe("2026-06-29T10:15:00.000Z");
+    expect(dataset.totalAreas).toBe(1);
+    expect(dataset.fallbackAreaCount).toBe(1);
   });
 });

@@ -2,17 +2,23 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getAreasWithLiveSignals } from "../data/live-signals";
+import { getLiveSignalDataset } from "../data/live-signals";
 import Home from "./page";
 
 vi.mock("server-only", () => ({}));
 vi.mock("../data/live-signals", () => ({
-  getAreasWithLiveSignals: vi.fn(async (areas) => areas),
+  getLiveSignalDataset: vi.fn(async (areas) => ({
+    areas,
+    source: "fallback",
+    refreshedAt: "2026-06-29T10:15:00.000Z",
+    totalAreas: areas.length,
+    fallbackAreaCount: areas.length,
+  })),
 }));
 
 describe("Home page", () => {
   beforeEach(() => {
-    vi.mocked(getAreasWithLiveSignals).mockClear();
+    vi.mocked(getLiveSignalDataset).mockClear();
   });
 
   afterEach(() => {
@@ -32,6 +38,7 @@ describe("Home page", () => {
     expect(
       screen.getByText(/Anand Vihar has a risk score of 69/),
     ).toBeInTheDocument();
-    expect(getAreasWithLiveSignals).toHaveBeenCalledOnce();
+    expect(screen.getByText("Seed fallback")).toBeInTheDocument();
+    expect(getLiveSignalDataset).toHaveBeenCalledOnce();
   });
 });
