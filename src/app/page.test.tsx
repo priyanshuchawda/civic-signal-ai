@@ -1,12 +1,20 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getAreasWithLiveSignals } from "../data/live-signals";
 import Home from "./page";
 
 vi.mock("server-only", () => ({}));
+vi.mock("../data/live-signals", () => ({
+  getAreasWithLiveSignals: vi.fn(async (areas) => areas),
+}));
 
 describe("Home page", () => {
+  beforeEach(() => {
+    vi.mocked(getAreasWithLiveSignals).mockClear();
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });
@@ -24,5 +32,6 @@ describe("Home page", () => {
     expect(
       screen.getByText(/Anand Vihar has a risk score of 69/),
     ).toBeInTheDocument();
+    expect(getAreasWithLiveSignals).toHaveBeenCalledOnce();
   });
 });

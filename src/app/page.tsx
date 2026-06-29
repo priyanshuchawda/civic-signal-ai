@@ -6,12 +6,14 @@ import { ComplaintIntake } from "../components/complaints/complaint-intake";
 import { explainRisk } from "../ai/gemini";
 import { getDashboardSummary } from "../data/dashboard";
 import { delhiSeedAreas } from "../data/delhi-seed";
+import { getAreasWithLiveSignals } from "../data/live-signals";
 import { generateOperatorActions } from "../domain/recommendations";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const summary = getDashboardSummary(delhiSeedAreas);
+  const areas = await getAreasWithLiveSignals(delhiSeedAreas);
+  const summary = getDashboardSummary(areas);
   const topArea = summary.areas[0];
   const operatorActions = generateOperatorActions(summary.areas);
   const topAreaExplanation = topArea
@@ -73,7 +75,7 @@ export default async function Home() {
             <AreaRanking areas={summary.areas} />
           </div>
           <div className="space-y-6">
-            <ComplaintIntake areas={delhiSeedAreas} />
+            <ComplaintIntake areas={areas} />
             <ActionQueue actions={operatorActions} />
           </div>
         </div>
