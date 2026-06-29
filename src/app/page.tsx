@@ -3,6 +3,7 @@ import { RiskSummary } from "../components/dashboard/risk-summary";
 import { RiskExplanationPanel } from "../components/dashboard/risk-explanation-panel";
 import { ActionQueue } from "../components/dashboard/action-queue";
 import { DataSourceStatus } from "../components/dashboard/data-source-status";
+import { PriorityMap } from "../components/dashboard/priority-map";
 import { ComplaintIntake } from "../components/complaints/complaint-intake";
 import { explainRisk } from "../ai/gemini";
 import { getDashboardSummary } from "../data/dashboard";
@@ -75,6 +76,7 @@ export default async function Home() {
                 explanation={topAreaExplanation}
               />
             ) : null}
+            <PriorityMap areas={summary.areas} />
             <AreaRanking areas={summary.areas} />
           </div>
           <div className="space-y-6">
