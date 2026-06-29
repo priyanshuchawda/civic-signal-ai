@@ -187,7 +187,7 @@ Use Leaflet with OpenStreetMap tiles. Dynamic map components must be client-only
 Branch naming:
 
 ```text
-issue-<number>-short-description
+feat/<issue-number>-short-description
 ```
 
 PR title format:
