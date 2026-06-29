@@ -34,6 +34,9 @@ describe("Home page", () => {
     expect(
       screen.getByRole("heading", { name: "Risk explanation" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Priority map" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Local fallback")).toBeInTheDocument();
     expect(
       screen.getByText(/Anand Vihar has a risk score of 69/),
