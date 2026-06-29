@@ -18,16 +18,20 @@ type GenerateContentClient = {
     generateContent: (request: {
       model: string;
       contents: string;
+      config?: {
+        maxOutputTokens?: number;
+        temperature?: number;
+      };
     }) => Promise<{ text?: string }>;
   };
 };
 
-const defaultModel = "gemini-2.5-flash";
+const defaultModel = "gemini-3.1-flash-lite";
 
 function buildRiskPrompt(input: ExplainRiskInput) {
   const reasons = input.reasons.join("; ") || "no major elevated signals";
 
-  return `Explain this Delhi civic risk in plain language. Area: ${input.areaName}. Score: ${input.score}. Reasons: ${reasons}.`;
+  return `Explain this Delhi civic risk in plain language for an operator dashboard. Use only the provided signals. Do not add outside facts, markdown, bullets, or recommendations. Keep it to two short sentences. Area: ${input.areaName}. Score: ${input.score}. Signals: ${reasons}.`;
 }
 
 function fallbackExplanation(input: ExplainRiskInput): ExplainRiskResult {
@@ -51,14 +55,28 @@ export async function explainRisk(
     return fallbackExplanation(input);
   }
 
-  const client = injectedClient ?? (await createGeminiClient(input.apiKey ?? ""));
-  const response = await client.models.generateContent({
-    model: input.model || defaultModel,
-    contents: buildRiskPrompt(input),
-  });
+  try {
+    const client =
+      injectedClient ?? (await createGeminiClient(input.apiKey ?? ""));
+    const response = await client.models.generateContent({
+      model: input.model || defaultModel,
+      contents: buildRiskPrompt(input),
+      config: {
+        maxOutputTokens: 160,
+        temperature: 0.2,
+      },
+    });
+    const text = response.text?.trim();
 
-  return {
-    source: "gemini",
-    text: response.text || fallbackExplanation(input).text,
-  };
+    if (!text) {
+      return fallbackExplanation(input);
+    }
+
+    return {
+      source: "gemini",
+      text,
+    };
+  } catch {
+    return fallbackExplanation(input);
+  }
 }

@@ -41,7 +41,50 @@ describe("explainRisk", () => {
     expect(generateContent).toHaveBeenCalledWith({
       model: "gemini-2.5-flash",
       contents:
-        "Explain this Delhi civic risk in plain language. Area: Anand Vihar. Score: 75. Reasons: AQI risk is very high.",
+        "Explain this Delhi civic risk in plain language for an operator dashboard. Use only the provided signals. Do not add outside facts, markdown, bullets, or recommendations. Keep it to two short sentences. Area: Anand Vihar. Score: 75. Signals: AQI risk is very high.",
+      config: {
+        maxOutputTokens: 160,
+        temperature: 0.2,
+      },
     });
+  });
+
+  it("uses the current Flash-Lite model by default", async () => {
+    const generateContent = vi.fn().mockResolvedValue({
+      text: "Prioritize Anand Vihar because AQI risk is very high.",
+    });
+
+    await explainRisk(
+      {
+        areaName: "Anand Vihar",
+        score: 75,
+        reasons: ["AQI risk is very high"],
+      },
+      { models: { generateContent } },
+    );
+
+    expect(generateContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "gemini-3.1-flash-lite",
+      }),
+    );
+  });
+
+  it("falls back when the Gemini request fails", async () => {
+    const generateContent = vi.fn().mockRejectedValue(new Error("quota"));
+
+    const result = await explainRisk(
+      {
+        apiKey: "test-key",
+        areaName: "Anand Vihar",
+        score: 75,
+        reasons: ["AQI risk is very high"],
+      },
+      { models: { generateContent } },
+    );
+
+    expect(result.source).toBe("fallback");
+    expect(result.text).toContain("Anand Vihar");
+    expect(result.text).toContain("AQI risk is very high");
   });
 });
