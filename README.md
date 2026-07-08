@@ -1,4 +1,4 @@
-# CivicSignal AI
+# CivicSignal AI - Archived
 
 Delhi-first AI decision intelligence for safer, healthier, and more responsive communities.
 
